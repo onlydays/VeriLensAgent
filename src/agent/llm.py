@@ -36,6 +36,8 @@ class LLM:
             kwargs["tools"] = tools
 
         resp = self.client.chat.completions.create(**kwargs)
+        if not resp.choices:
+            raise RuntimeError("LLM 返回了空响应（无 choices），请重试")
         msg = resp.choices[0].message
 
         # 模型决定调用工具

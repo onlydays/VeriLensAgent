@@ -49,13 +49,15 @@ class ResearchAgent:
                     "content": obs,
                 })
 
-        # 达到最大步数仍未收敛：强制基于已有信息总结
+        # 达到最大步数仍未收敛：禁用工具强制总结（不再传 tools，
+        # 避免模型继续要求调用工具导致结论为空）
         messages.append({
             "role": "user",
-            "content": "已到最大步数，请基于当前已收集的信息，直接输出最终调研报告。",
+            "content": "已到最大步数，请基于当前已收集的信息，直接输出最终调研报告（不要调用任何工具）。",
         })
-        final = self.llm.chat(messages, tool_schemas)
-        return Report(conclusion=final.text)
+        final = self.llm.chat(messages)
+        text = final.text.strip()
+        return Report(conclusion=text or "（达到步数上限且模型未返回结论，建议人工复核）")
 
     def _assistant_msg(self, result: StepResult) -> dict:
         """把 tool_calls 构造成 OpenAI 兼容的 assistant 消息。"""
